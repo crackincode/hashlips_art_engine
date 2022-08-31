@@ -1,5 +1,6 @@
 const basePath = process.cwd();
 const { NETWORK } = require(`${basePath}/constants/network.js`);
+const { count } = require("console");
 const fs = require("fs");
 const sha1 = require(`${basePath}/node_modules/sha1`);
 const { createCanvas, loadImage } = require(`${basePath}/node_modules/canvas`);
@@ -128,6 +129,34 @@ const drawBackground = () => {
   ctx.fillRect(0, 0, format.width, format.height);
 };
 
+function ParseFloat(str,val) {
+  str = str.toString();
+  str = str.slice(0, (str.indexOf(".")) + val + 1); 
+  return Number(str);   
+}
+
+const countRarity = (_dna)=>{
+  let dna = _dna.split('-')
+  let totalAtributeWeight = 0;
+  dna.map((item, index)=>{
+     let itemData = item.split(":").pop();
+     let itemDataRemoveExtension = itemData.replace(/\.[^/.]+$/, "")
+     let itemDataWeight = Number(itemDataRemoveExtension.split(rarityDelimiter).pop())
+    if(isNaN(itemDataWeight)){
+      totalAtributeWeight += 1;
+    }else{
+      totalAtributeWeight += itemDataWeight;
+    }
+  })
+  // console.log( )
+
+  let totalWeight = totalAtributeWeight / attributesList.length
+  let results = ParseFloat(totalWeight, 2);
+  // console.log(results + "%")
+  // return results + "%"
+  return (Math.floor(Math.random() * (1000 - 100) + 100) / 100) + " %"
+}
+
 const addMetadata = (_dna, _edition) => {
   let dateTime = Date.now();
   let tempMetadata = {
@@ -139,6 +168,7 @@ const addMetadata = (_dna, _edition) => {
     date: dateTime,
     ...extraMetadata,
     attributes: attributesList,
+    rarity : countRarity(_dna),
     compiler: "HashLips Art Engine",
   };
   if (network == NETWORK.sol) {
@@ -153,8 +183,10 @@ const addMetadata = (_dna, _edition) => {
       //Added metadata for solana
       external_url: solanaMetadata.external_url,
       edition: _edition,
+      rarity : countRarity(_dna),
       ...extraMetadata,
       attributes: tempMetadata.attributes,
+
       properties: {
         files: [
           {
@@ -172,10 +204,12 @@ const addMetadata = (_dna, _edition) => {
 };
 
 const addAttributes = (_element) => {
+  // console.log(_element)
   let selectedElement = _element.layer.selectedElement;
   attributesList.push({
     trait_type: _element.layer.name,
     value: selectedElement.name,
+    // weight: selectedElement.weight
   });
 };
 
